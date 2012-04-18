@@ -54,7 +54,7 @@ public class PoReader2Test
       inputSource = new InputSource(new File(testDir, locale + "/RPM.po").toURI().toString());
       inputSource.setEncoding("utf8");
       System.out.println("extracting target: " + locale);
-      TranslationsResource targetDoc = poReader.extractTarget(inputSource, doc);
+      TranslationsResource targetDoc = poReader.extractTarget(inputSource);
       List<TextFlowTarget> textFlowTargets = targetDoc.getTextFlowTargets();
       assertThat(textFlowTargets.size(), is(137));
       TextFlowTarget target = textFlowTargets.iterator().next();
@@ -113,7 +113,7 @@ public class PoReader2Test
       inputSource.setEncoding("utf8");
       System.out.println("extracting target: " + locale);
 
-      poReader.extractTarget(inputSource, srcDoc);
+      poReader.extractTarget(inputSource);
    }
 
 }
