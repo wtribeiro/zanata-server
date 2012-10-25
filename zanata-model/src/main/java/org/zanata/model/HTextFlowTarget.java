@@ -93,14 +93,6 @@ public class HTextFlowTarget extends ModelEntityBase implements HasContents, Has
 
    private Map<Integer, HTextFlowTargetHistory> history;
 
-   // Only for internal use (persistence transient)
-   @Setter(AccessLevel.PRIVATE)
-   private Integer oldVersionNum;
-
-   // Only for internal use (persistence transient)
-   @Setter(AccessLevel.PRIVATE)
-   private HTextFlowTargetHistory initialState;
-
    public HTextFlowTarget(HTextFlow textFlow, HLocale locale)
    {
       this.locale = locale;
@@ -321,25 +313,6 @@ public class HTextFlowTarget extends ModelEntityBase implements HasContents, Has
          this.history = new HashMap<Integer, HTextFlowTargetHistory>();
       }
       return history;
-   }
-
-   @PreUpdate
-   private void preUpdate()
-   {
-      // insert history if this has changed from its initial state
-      if (this.initialState != null && this.initialState.hasChanged(this))
-      {
-         this.getHistory().put(this.oldVersionNum, this.initialState);
-      }
-   }
-
-   @PostUpdate
-   @PostPersist
-   @PostLoad
-   private void updateInternalHistory()
-   {
-      this.oldVersionNum = this.getVersionNum();
-      this.initialState = new HTextFlowTargetHistory(this);
    }
 
    @Override

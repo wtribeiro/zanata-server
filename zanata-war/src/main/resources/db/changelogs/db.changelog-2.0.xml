@@ -470,4 +470,118 @@
         <dropTable tableName="HTextFlowTargetContent" cascadeConstraints="false"/>
     </changeSet>
 
+    <changeSet id="16" author="camunoz@redhat.com">
+        <comment>Create Content fields on HTextFlowHistory table.</comment>
+        <addColumn tableName="HTextFlowHistory">
+            <column name="content0" type="longtext">
+                <constraints nullable="true"/>
+            </column>
+            <column name="content1" type="longtext">
+                <constraints nullable="true"/>
+            </column>
+            <column name="content2" type="longtext">
+                <constraints nullable="true"/>
+            </column>
+            <column name="content3" type="longtext">
+                <constraints nullable="true"/>
+            </column>
+            <column name="content4" type="longtext">
+                <constraints nullable="true"/>
+            </column>
+            <column name="content5" type="longtext">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="17" author="camunoz@redhat.com">
+        <comment>Migrate HTextFlowContentHistory data to HTextFlowHistory table.</comment>
+        <sql>
+            update HTextFlowHistory tfh set content0 =
+            ( select content from HTextFlowContentHistory tfch where tfch.text_flow_history_id = tfh.id and pos = 0 )
+        </sql>
+        <sql>
+            update HTextFlowHistory tfh set content1 =
+            ( select content from HTextFlowContentHistory tfch where tfch.text_flow_history_id = tfh.id and pos = 1 )
+        </sql>
+        <sql>
+            update HTextFlowHistory tfh set content2 =
+            ( select content from HTextFlowContentHistory tfch where tfch.text_flow_history_id = tfh.id and pos = 2 )
+        </sql>
+        <sql>
+            update HTextFlowHistory tfh set content3 =
+            ( select content from HTextFlowContentHistory tfch where tfch.text_flow_history_id = tfh.id and pos = 3 )
+        </sql>
+        <sql>
+            update HTextFlowHistory tfh set content4 =
+            ( select content from HTextFlowContentHistory tfch where tfch.text_flow_history_id = tfh.id and pos = 4 )
+        </sql>
+        <sql>
+            update HTextFlowHistory tfh set content5 =
+            ( select content from HTextFlowContentHistory tfch where tfch.text_flow_history_id = tfh.id and pos = 5 )
+        </sql>
+    </changeSet>
+
+    <changeSet id="18" author="camunoz@redhat.com">
+        <comment>Remove HTextFlowContentHistory table.</comment>
+        <dropTable tableName="HTextFlowContentHistory" cascadeConstraints="false"/>
+    </changeSet>
+
+    <changeSet id="19" author="camunoz@redhat.com">
+        <comment>Create Content fields on HTextFlowTargetHistory table.</comment>
+        <addColumn tableName="HTextFlowTargetHistory">
+            <column name="content0" type="longtext">
+                <constraints nullable="true"/>
+            </column>
+            <column name="content1" type="longtext">
+                <constraints nullable="true"/>
+            </column>
+            <column name="content2" type="longtext">
+                <constraints nullable="true"/>
+            </column>
+            <column name="content3" type="longtext">
+                <constraints nullable="true"/>
+            </column>
+            <column name="content4" type="longtext">
+                <constraints nullable="true"/>
+            </column>
+            <column name="content5" type="longtext">
+                <constraints nullable="true"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="20" author="camunoz@redhat.com">
+        <comment>Migrate HTextFlowTargetContentHistory data to HTextFlowTargetHistory table.</comment>
+        <sql>
+            update HTextFlowTargetHistory tfth set content0 =
+            ( select content from HTextFlowTargetContentHistory tftch where tftch.text_flow_target_history_id = tfth.id and pos = 0 )
+        </sql>
+        <sql>
+            update HTextFlowTargetHistory tfth set content1 =
+            ( select content from HTextFlowTargetContentHistory tftch where tftch.text_flow_target_history_id = tfth.id and pos = 1 )
+        </sql>
+        <sql>
+            update HTextFlowTargetHistory tfth set content2 =
+            ( select content from HTextFlowTargetContentHistory tftch where tftch.text_flow_target_history_id = tfth.id and pos = 2 )
+        </sql>
+        <sql>
+            update HTextFlowTargetHistory tfth set content3 =
+            ( select content from HTextFlowTargetContentHistory tftch where tftch.text_flow_target_history_id = tfth.id and pos = 3 )
+        </sql>
+        <sql>
+            update HTextFlowTargetHistory tfth set content4 =
+            ( select content from HTextFlowTargetContentHistory tftch where tftch.text_flow_target_history_id = tfth.id and pos = 4 )
+        </sql>
+        <sql>
+            update HTextFlowTargetHistory tfth set content5 =
+            ( select content from HTextFlowTargetContentHistory tftch where tftch.text_flow_target_history_id = tfth.id and pos = 5 )
+        </sql>
+    </changeSet>
+
+    <changeSet id="21" author="camunoz@redhat.com">
+        <comment>Remove HTextFlowTargetContentHistory table.</comment>
+        <dropTable tableName="HTextFlowTargetContentHistory" cascadeConstraints="false"/>
+    </changeSet>
+
 </databaseChangeLog>

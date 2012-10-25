@@ -22,14 +22,22 @@ package org.zanata.dao;
 
 import java.util.List;
 
+import org.hibernate.Criteria;
+import org.hibernate.Hibernate;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.criterion.Projections;
+import org.hibernate.criterion.Restrictions;
+import org.hibernate.type.StringType;
 import org.jboss.seam.ScopeType;
 import org.jboss.seam.annotations.AutoCreate;
 import org.jboss.seam.annotations.Name;
 import org.jboss.seam.annotations.Scope;
+import org.zanata.common.HasContents;
 import org.zanata.model.HTextFlowTarget;
 import org.zanata.model.HTextFlowTargetHistory;
+
+import static org.zanata.common.HasContents.MAX_PLURALS;
 
 
 @Name("textFlowTargetHistoryDAO")
@@ -50,30 +58,37 @@ public class TextFlowTargetHistoryDAO extends AbstractDAOImpl<HTextFlowTargetHis
 
    public boolean findContentInHistory(HTextFlowTarget target, List<String> contents)
    {
-      Query query;
-      
-      // use named queries for the smaller more common cases
-      if( contents.size() <= 6 )
-      {
-         query = getSession().getNamedQuery("HTextFlowTargetHistory.findContentInHistory[" + contents.size() + "]");
-      }
-      else
-      {
-         StringBuilder queryStr = new StringBuilder("select count(*) from HTextFlowTargetHistory t where t.textFlowTarget = ? and size(t.contents) = ?");
-         for( int i=0; i<contents.size(); i++ )
-         {
-            queryStr.append(" and contents[" + i + "] = ?");
-         }
-         query = getSession().createQuery(queryStr.toString());
-      }
-      query.setParameter(0, target);
-      query.setParameter(1, contents.size());
-      int paramPos = 2;
+
+      Criteria criteria = getSession().createCriteria(HTextFlowTargetHistory.class);
+      criteria.add(Restrictions.eq("textFlowTarget", target));
+
+      int paramPos = 1;
+      int contentIdx = 0;
       for( String c : contents )
       {
-         query.setParameter(paramPos++, c);
+         // Only for the max number of plurals
+         if( contentIdx < MAX_PLURALS)
+         {
+            String contentField = "content" + contentIdx++;
+            if( c == null )
+            {
+               criteria.add(Restrictions.isNull(contentField));
+            }
+            else
+            {
+               criteria.add(Restrictions.eq(contentField, c));
+            }
+         }
       }
-      return (Long)query.uniqueResult() != 0;
+      // Fill the rest of the parameter values with null
+      while( contentIdx < MAX_PLURALS )
+      {
+         String contentField = "content" + contentIdx++;
+         criteria.add(Restrictions.isNull(contentField));
+      }
+
+      criteria.setProjection(Projections.rowCount());
+      return (Integer)criteria.uniqueResult() != 0;
    }
 
    public boolean findConflictInHistory(HTextFlowTarget target, Integer verNum, String username)

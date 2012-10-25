@@ -20,6 +20,10 @@ import org.zanata.model.HDocument;
 import org.zanata.model.HLocale;
 import org.zanata.model.HTextFlow;
 import org.zanata.model.HTextFlowTarget;
+import org.zanata.util.QueryBuilder;
+
+import static org.zanata.util.QueryBuilder.and;
+import static org.zanata.util.QueryBuilder.or;
 
 @Name("textFlowTargetDAO")
 @AutoCreate

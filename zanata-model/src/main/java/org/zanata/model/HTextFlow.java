@@ -138,13 +138,6 @@ public class HTextFlow extends HTextContainer implements Serializable, ITextFlow
 
    private String content5;
 
-   // Only for internal use (persistence transient)
-   @Setter(AccessLevel.PRIVATE)
-   private Integer oldRevision;
-   
-   // Only for internal use (persistence transient)
-   @Setter(AccessLevel.PRIVATE)
-   private HTextFlowHistory initialState;
 
    public HTextFlow(HDocument document, String resId, String content)
    {
@@ -466,28 +459,6 @@ public class HTextFlow extends HTextContainer implements Serializable, ITextFlow
       }
       LocaleId docLocaleId = docLocale.getLocaleId();
       return docLocaleId.getId();
-   }
-   
-   @PreUpdate
-   private void preUpdate()
-   {
-      if( !this.revision.equals(this.oldRevision) )
-      {
-         // there is an initial state
-         if( this.initialState != null )
-         {
-            this.getHistory().put(this.oldRevision, this.initialState);
-         }
-      }
-   }
-   
-   @PostUpdate
-   @PostPersist
-   @PostLoad
-   private void updateInternalHistory()
-   {
-      this.oldRevision = this.revision;
-      this.initialState = new HTextFlowHistory(this);
    }
 
 }

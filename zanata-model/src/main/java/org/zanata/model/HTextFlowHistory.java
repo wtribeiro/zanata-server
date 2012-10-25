@@ -32,6 +32,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 
 import org.hibernate.annotations.AccessType;
 import org.hibernate.annotations.CollectionOfElements;
@@ -41,7 +42,10 @@ import org.hibernate.annotations.Type;
 import org.hibernate.validator.NotEmpty;
 import com.google.common.base.Objects;
 
+import lombok.Setter;
+
 @Entity
+@Setter
 @org.hibernate.annotations.Entity(mutable = false)
 public class HTextFlowHistory extends HTextContainer implements Serializable, ITextFlowHistory
 {
@@ -51,7 +55,12 @@ public class HTextFlowHistory extends HTextContainer implements Serializable, IT
    private Long id;
    private Integer revision;
    private HTextFlow textFlow;
-   private List<String> contents;
+   private String content0;
+   private String content1;
+   private String content2;
+   private String content3;
+   private String content4;
+   private String content5;
    private boolean obsolete;
 
    private Integer pos;
@@ -107,23 +116,127 @@ public class HTextFlowHistory extends HTextContainer implements Serializable, IT
    }
 
    @NotEmpty
-   @Type(type = "text")
-   @AccessType("field")
-   @CollectionOfElements(fetch = FetchType.EAGER)
-   @JoinTable(name = "HTextFlowContentHistory", 
-      joinColumns = @JoinColumn(name = "text_flow_history_id")
-   )
-   @IndexColumn(name = "pos", nullable = false)
-   @Column(name = "content", nullable = false)
    @Override
+   @Transient
    public List<String> getContents()
    {
+      List<String> contents = new ArrayList<String>();
+      boolean populating = false;
+      for( int i = MAX_PLURALS-1; i >= 0; i-- )
+      {
+         String c = this.getContent(i);
+         if( c != null )
+         {
+            populating = true;
+         }
+
+         if( populating )
+         {
+            contents.add(0, c);
+         }
+      }
       return contents;
    }
 
    public void setContents(List<String> contents)
    {
-      this.contents = new ArrayList<String>(contents);
+      if(!Objects.equal(contents, this.getContents()))
+      {
+         for( int i=0; i<contents.size(); i++ )
+         {
+            this.setContent(i, contents.get(i));
+         }
+      }
+   }
+
+   private String getContent(int idx)
+   {
+      switch (idx)
+      {
+         case 0:
+            return content0;
+
+         case 1:
+            return content1;
+
+         case 2:
+            return content2;
+
+         case 3:
+            return content3;
+
+         case 4:
+            return content4;
+
+         case 5:
+            return content5;
+
+         default:
+            throw new RuntimeException("Invalid Content index: " + idx);
+      }
+   }
+
+   private void setContent(int idx, String content)
+   {
+      switch (idx)
+      {
+         case 0:
+            content0 = content;
+            break;
+
+         case 1:
+            content1 = content;
+            break;
+
+         case 2:
+            content2 = content;
+            break;
+
+         case 3:
+            content3 = content;
+            break;
+
+         case 4:
+            content4 = content;
+            break;
+
+         case 5:
+            content5 = content;
+            break;
+
+         default:
+            throw new RuntimeException("Invalid Content index: " + idx);
+      }
+   }
+
+   protected String getContent0()
+   {
+      return content0;
+   }
+
+   protected String getContent1()
+   {
+      return content1;
+   }
+
+   protected String getContent2()
+   {
+      return content2;
+   }
+
+   protected String getContent3()
+   {
+      return content3;
+   }
+
+   protected String getContent4()
+   {
+      return content4;
+   }
+
+   protected String getContent5()
+   {
+      return content5;
    }
 
    @Override
