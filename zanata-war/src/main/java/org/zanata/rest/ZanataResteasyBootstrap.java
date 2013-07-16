@@ -5,6 +5,7 @@ import java.util.Collection;
 
 import javax.ws.rs.core.Response.Status;
 
+import org.jboss.resteasy.core.AsynchronousDispatcher;
 import org.jboss.resteasy.core.Dispatcher;
 import org.jboss.resteasy.core.SynchronousDispatcher;
 import org.jboss.resteasy.spi.HttpRequest;
@@ -64,7 +65,7 @@ public class ZanataResteasyBootstrap extends ResteasyBootstrap
    @Override
    protected Dispatcher createDispatcher(SeamResteasyProviderFactory providerFactory)
    {
-      return new SynchronousDispatcher(providerFactory)
+      return new AsynchronousDispatcher(providerFactory)
       {
          @Override
          public void invoke(HttpRequest request, HttpResponse response)

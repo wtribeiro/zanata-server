@@ -25,16 +25,20 @@ import java.util.Iterator;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 
 import org.apache.commons.io.IOUtils;
+import org.jboss.resteasy.annotations.Suspend;
 import org.jboss.resteasy.plugins.providers.multipart.InputPart;
 import org.jboss.resteasy.plugins.providers.multipart.MultipartFormDataInput;
+import org.jboss.resteasy.spi.AsynchronousResponse;
 import org.jboss.seam.annotations.In;
 import org.jboss.seam.annotations.Name;
 import org.jboss.seam.annotations.TransactionPropagationType;
@@ -123,6 +127,34 @@ public class TranslationMemoryService implements TranslationMemoryResource
          System.out.println(new String(bytes));
       }
       return Response.status(200).build();
+   }
+
+   @GET
+   @Path("basic")
+   @Produces("text/plain")
+   public void getBasic(final @Suspend(Long.MAX_VALUE) AsynchronousResponse response) throws Exception
+   {
+      Thread t = new Thread(new Runnable()
+      {
+         @Override
+         public void run()
+         {
+            int i = 0;
+            while(i<60)
+            {
+               try
+               {
+                  Thread.sleep(10000);
+               } catch (InterruptedException e)
+               {
+               }
+               i++;
+               System.out.println("Waiting for " + (i*10) + " seconds");
+            }
+            response.setResponse(Response.ok("Finished").build());
+         }
+      });
+      t.start();
    }
 
    private Response buildTMX(@Nonnull Iterator<? extends SourceContents> tuIter, @Nullable String projectSlug, @Nullable String iterationSlug, @Nullable LocaleId locale)
