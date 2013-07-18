@@ -7,8 +7,10 @@ import org.concordion.api.extension.Extensions;
 import org.concordion.ext.ScreenshotExtension;
 import org.concordion.ext.TimestampFormatterExtension;
 import org.concordion.integration.junit4.ConcordionRunner;
+import org.junit.ClassRule;
 import org.junit.runner.RunWith;
 import org.zanata.concordion.CustomResourceExtension;
+import org.zanata.util.ResetDatabaseRule;
 import org.zanata.workflow.ClientPushWorkFlow;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
@@ -23,6 +25,9 @@ import com.google.common.collect.Iterables;
 @Extensions({ScreenshotExtension.class, TimestampFormatterExtension.class, CustomResourceExtension.class})
 public class UnauthorizedGlossaryDeleteTest
 {
+   @ClassRule
+   public static ResetDatabaseRule resetDatabaseRule = new ResetDatabaseRule(ResetDatabaseRule.Config.WithData);
+
    private ClientPushWorkFlow clientPushWorkFlow = new ClientPushWorkFlow();
    private File projectRootPath;
 

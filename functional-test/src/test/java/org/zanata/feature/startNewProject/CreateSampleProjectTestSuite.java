@@ -28,6 +28,12 @@ import org.zanata.util.ResetDatabaseRule;
 import lombok.extern.slf4j.Slf4j;
 import static org.zanata.util.ResetDatabaseRule.Config.*;
 
+/**
+ * This suite is currently needed to ensure the tests are run in the correct order.
+ * FIXME make the tests independent of execution order and delete this suite
+ * @author Sean Flanigan <a href="mailto:sflaniga@redhat.com">sflaniga@redhat.com</a>
+ *
+ */
 @Slf4j
 @RunWith(Suite.class)
 // @formatter:off

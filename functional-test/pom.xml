@@ -107,6 +107,12 @@
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
         </dependency>
+
+        <dependency>
+            <groupId>com.dhemery.runtime-suite</groupId>
+            <artifactId>core</artifactId>
+        </dependency>
+
         <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
@@ -168,6 +174,11 @@
             <groupId>${jdbc.groupId}</groupId>
             <artifactId>${jdbc.artifactId}</artifactId>
             <version>${jdbc.version}</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.zanata</groupId>
+            <artifactId>zanata-common-util</artifactId>
         </dependency>
 
     </dependencies>

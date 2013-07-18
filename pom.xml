@@ -36,7 +36,7 @@
       <!-- This should always be the previous version of the used api version above -->
       <zanata.api.compat.version>3.0.1-SNAPSHOT</zanata.api.compat.version>
       <zanata.client.version>3.0.1-SNAPSHOT</zanata.client.version>
-      <zanata.common.version>3.0.0</zanata.common.version>
+      <zanata.common.version>3.0.1-SNAPSHOT</zanata.common.version>
 
       <richfaces.version>4.3.2.Final</richfaces.version>
 
@@ -484,6 +484,12 @@
               <artifactId>concordion-extensions</artifactId>
               <version>1.1.0</version>
               <scope>test</scope>
+          </dependency>
+
+          <dependency>
+              <groupId>com.dhemery.runtime-suite</groupId>
+              <artifactId>core</artifactId>
+              <version>0.5</version>
           </dependency>
 
       </dependencies>
