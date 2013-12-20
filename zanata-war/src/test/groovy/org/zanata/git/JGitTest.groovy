@@ -5,7 +5,10 @@ import groovy.json.JsonSlurper
 import org.apache.commons.io.FileUtils
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.internal.storage.file.FileRepository
+import org.eclipse.jgit.lib.ObjectLoader
 import org.eclipse.jgit.lib.Repository
+import org.eclipse.jgit.revwalk.RevCommit
+import org.eclipse.jgit.treewalk.TreeWalk
 import org.hamcrest.MatcherAssert
 import org.hamcrest.Matchers
 import org.testng.annotations.AfterClass
@@ -93,6 +96,26 @@ class JGitTest {
     }
 
     @Test(priority = 5)
+    public void testMultipleCommitsAndHistory() {
+        modifyObj("jsonfile", "Name 1.5")
+        modifyObj("jsonfile", "Name 2.0")
+        modifyObj("jsonfile", "Name 3.0")
+
+        // Read the history of the modified object
+        Iterable<RevCommit> history = git.log().addPath("jsonfile").call();
+        history.each { RevCommit c ->
+            println c.fullMessage
+            TreeWalk treeWalk = TreeWalk.forPath(localRepo, "jsonfile", c.getTree())
+            def objectId = treeWalk.getObjectId(0) // should be the only object in the tree
+            ObjectLoader loader = localRepo.open( objectId )
+            def objectRev = loadObject( new String(loader.bytes) )
+
+            println objectRev.name
+            println()
+        }
+    }
+
+    @Test(priority = 7)
     public void createMaster() throws Exception {
         git.branchCreate().setName("master").setForce(true).call();
     }
@@ -101,4 +124,32 @@ class JGitTest {
     public void testPull() throws Exception {
         git.pull().call();
     }*/
+
+    private def loadObject( String json ) {
+        def slurper = new JsonSlurper()
+        slurper.parseText(json)
+    }
+
+    private def modifyObj(String id, String name) {
+        // Extract
+        def slurper = new JsonSlurper()
+        File myfile = new File("$localPath/$id")
+        def json = myfile.text
+        def storedObject = slurper.parseText(json)
+
+        // Modify
+        storedObject.name = name
+
+        // Add
+        def builder = new JsonBuilder()
+        builder.setContent(storedObject)
+
+        def writer = myfile.newWriter()
+        writer << builder.toPrettyString()
+        writer.flush()
+        git.add().addFilepattern(id).call();
+
+        // Commit
+        git.commit().setMessage("Edit obj (name: $name)").call();
+    }
 }
