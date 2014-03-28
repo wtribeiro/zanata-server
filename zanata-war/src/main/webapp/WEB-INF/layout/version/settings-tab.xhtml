@@ -5,7 +5,7 @@
   xmlns:rich="http://richfaces.org/rich"
   xmlns:s="http://jboss.org/schema/seam/taglib"
   xmlns:f="http://java.sun.com/jsf/core"
-  xmlns:zanata="http://java.sun.com/jsf/composite/zanata">
+  xmlns:z="http://java.sun.com/jsf/composite/zanata">
 
 <script type="text/javascript">
   function onValidationOptionChange(validationId) {
@@ -154,13 +154,15 @@
   <div class="panel">
     <div class="panel__header">
       <div class="panel__header__actions">
-        <a href="#" class="button button--snug l--push-top-half"
-          data-toggle="modal"
-          data-target="#modal-1" onclick="openUploadSourceDocPanel()"
-          title="#{messages['jsf.iteration.files.UploadNewSourceDocument']}">
+
+        <!-- This is the button to open the modal. -->
+        <z:multi-file-upload title="#{messages['jsf.iteration.files.UploadNewSourceDocument']}"
+                             url="#{request.contextPath}/files/upload?p=#{versionHome.projectSlug}&amp;v=#{versionHome.slug}"
+                             accepted="txt, odt">
           <i class="i i--plus"></i>
-        </a>
-        <zanata:sortlist id="settings-document_sorting"
+        </z:multi-file-upload>
+
+        <z:sortlist id="settings-document_sorting"
           sortAction="#{versionHomeAction.sortSettingsDocumentList()}"
           render="settings-document_form, settingsTabDocumentSearch-pager, settingsTabDocumentSearch-page-info, settingsTabDocumentSearchBottom-pager, settingsTabDocumentSearchBottom-page-info"
           sortingList="#{versionHomeAction.settingsDocumentSortingList}"/>
@@ -170,7 +172,7 @@
     </div>
 
     <div class="panel__sub-header js-reveal">
-      <zanata:list-filter iconClass="i--document"
+      <z:list-filter iconClass="i--document"
         listId="settings-document_form"
         render="settings-document_form, settingsTabDocumentSearchBottom-pager, settingsTabDocumentSearchBottom-page-info"
         id="settingsTabDocumentSearch"
@@ -224,7 +226,7 @@
         </ui:repeat>
       </ul>
     </h:form>
-    <zanata:list-filter iconClass="i--document" listId="settings-document_form"
+    <z:list-filter iconClass="i--document" listId="settings-document_form"
       render="settings-document_form, settingsTabDocumentSearch-pager, settingsTabDocumentSearch-page-info"
       id="settingsTabDocumentSearchBottom" bottomPanel="true"
       placeholder="#{messages['jsf.document.search.placeholder']}"
@@ -238,7 +240,7 @@
 
   <h:form id="settings-languages-form" styleClass="l--push-bottom-0">
 
-    <zanata:checkbox onValueChanged="bindCustomizedLocales"
+    <z:checkbox onValueChanged="bindCustomizedLocales"
       checked="#{!versionHome.instance.overrideLocales}"
       value="inheritesLanguage"
       label="#{messages['jsf.iteration.inheriteLanguage.label']}"
@@ -265,7 +267,7 @@
             #{messages['jsf.AddALanguage']}
           </label>
 
-          <zanata:autocomplete
+          <z:autocomplete
             actionBean="#{versionHome.localeAutocomplete}"
             maxlength="80" searchWhenFocus="true"
             id="languageAutocomplete"
@@ -274,7 +276,7 @@
             placeholder="#{messages['jsf.language.search.placeholder']}">
             #{result.retrieveDisplayName()}<span
             class="txt--understated l--push-left-quarter">[#{result.localeId}]</span>
-          </zanata:autocomplete>
+          </z:autocomplete>
         </li>
       </ul>
     </s:fragment>
@@ -288,7 +290,7 @@
     <h3 class="heading--secondary">#{messages['jsf.label.review']}</h3>
 
     <div class="is-active" id="translation-review-form">
-      <zanata:checkbox
+      <z:checkbox
         label="#{messages['jsf.iteration.requireTranslationReview']}"
         onValueChanged="bindRequireReviewValue"
         checked="#{versionHome.instance.requireTranslationReview}"
@@ -423,7 +425,7 @@
         </s:div>
         <s:div
           styleClass="g__item w--2-3 l--push-top-half #{copyTransAction.inProgress? '': 'is-hidden'}">
-          <zanata:progressBar id="copy-trans-progress-bar"
+          <z:progressBar id="copy-trans-progress-bar"
             actionBean="#{copyTransAction}"
             render="copy-trans-progress-messages"
             onCompleteRender="copy-trans"/>
