@@ -12,6 +12,7 @@
   xmlns:mail="http://jboss.org/schema/seam/mail"
   xmlns:framework="http://jboss.org/schema/seam/framework"
   xmlns:resteasy="http://jboss.org/schema/seam/resteasy"
+  xmlns:jms="http://jboss.org/schema/seam/jms"
   xsi:schemaLocation=
     "http://jboss.org/schema/seam/core http://jboss.org/schema/seam/core-2.3.xsd
            http://jboss.org/schema/seam/persistence http://jboss.org/schema/seam/persistence-2.3.xsd
@@ -24,7 +25,8 @@
            http://jboss.org/schema/seam/mail http://jboss.org/schema/seam/mail-2.3.xsd
            http://jboss.org/schema/seam/framework http://jboss.org/schema/seam/framework-2.3.xsd
            http://jboss.org/schema/seam/resteasy http://jboss.org/schema/seam/resteasy-2.3.xsd
-           http://jboss.org/schema/seam/components http://jboss.org/schema/seam/components-2.3.xsd">
+           http://jboss.org/schema/seam/components http://jboss.org/schema/seam/components-2.3.xsd
+           http://jboss.org/schema/seam/jms http://jboss.org/schema/seam/jms-2.3.xsd">
   <!--      xmlns:async="http://jboss.org/seam/async" -->
 
   <core:init
@@ -144,6 +146,11 @@
     <property name="name">Administrator</property>
   </component>
 
+  <!-- JMS resources -->
+  <jms:queue-connection auto-create="true"
+    queue-connection-factory-jndi-name="java:/ConnectionFactory"/>
+  <jms:managed-queue-sender name="statsRefreshQueueSender"
+    auto-create="true" queue-jndi-name="queue/test" />
 
   <!-- Remember the locale selected -->
 
