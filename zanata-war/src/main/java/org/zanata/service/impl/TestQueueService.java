@@ -26,8 +26,10 @@ import org.jboss.seam.annotations.Name;
 import org.jboss.seam.annotations.Scope;
 
 import javax.jms.JMSException;
+import javax.jms.ObjectMessage;
 import javax.jms.QueueSender;
 import javax.jms.QueueSession;
+import java.io.Serializable;
 
 /**
  * @author Carlos Munoz <a href="mailto:camunoz@redhat.com">camunoz@redhat.com</a>
@@ -41,9 +43,12 @@ public class TestQueueService {
     @In
     private QueueSession queueSession;
 
-    public void publish(String message) {
+    public void publish(Serializable message) {
         try {
-            statsRefreshQueueSender.send( queueSession.createObjectMessage(message) );
+            ObjectMessage jmsMessage =
+                    queueSession.createObjectMessage(message);
+            jmsMessage.setJMSType(message.getClass().getName());
+            statsRefreshQueueSender.send(jmsMessage);
         }
         catch (JMSException e) {
             throw new RuntimeException(e);

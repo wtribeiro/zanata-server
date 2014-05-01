@@ -28,13 +28,15 @@ import lombok.Data;
 import org.zanata.common.ContentState;
 import org.zanata.common.LocaleId;
 
+import java.io.Serializable;
+
 /**
  * @author Sean Flanigan <a
  *         href="mailto:sflaniga@redhat.com">sflaniga@redhat.com</a>
  *
  */
 @Data
-public final class TextFlowTargetStateEvent {
+public final class TextFlowTargetStateEvent implements Serializable {
     public static final String EVENT_NAME =
             "org.zanata.event.HTextFlowTranslated";
     // this may be null in the case of document uploads

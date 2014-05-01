@@ -127,6 +127,9 @@ public class TranslationServiceImpl implements TranslationService {
     @In
     private ValidationService validationServiceImpl;
 
+    @In
+    private TestQueueService testQueueService;
+
     @In(value = JpaIdentityStore.AUTHENTICATED_USER, scope = ScopeType.SESSION,
             required = false)
     private HAccount authenticatedAccount;
@@ -315,13 +318,18 @@ public class TranslationServiceImpl implements TranslationService {
             // new DocumentId(document.getId(), document.getDocId()), hasError,
             // hTextFlowTarget.getLastChanged(),
             // hTextFlowTarget.getLastModifiedBy().getAccount().getUsername());
-            Events.instance().raiseTransactionSuccessEvent(
-                    TextFlowTargetStateEvent.EVENT_NAME,
-                    new TextFlowTargetStateEvent(actorId, versionId,
-                            documentId, textFlow.getId(), hTextFlowTarget
-                                    .getLocale().getLocaleId(), hTextFlowTarget
-                                    .getId(), hTextFlowTarget.getState(),
-                            oldState));
+//            Events.instance().raiseTransactionSuccessEvent(
+//                    TextFlowTargetStateEvent.EVENT_NAME,
+//                    new TextFlowTargetStateEvent(actorId, versionId,
+//                            documentId, textFlow.getId(), hTextFlowTarget
+//                                    .getLocale().getLocaleId(), hTextFlowTarget
+//                                    .getId(), hTextFlowTarget.getState(),
+//                            oldState));
+            testQueueService.publish(new TextFlowTargetStateEvent(actorId, versionId,
+                    documentId, textFlow.getId(), hTextFlowTarget
+                    .getLocale().getLocaleId(), hTextFlowTarget
+                    .getId(), hTextFlowTarget.getState(),
+                    oldState));
         }
     }
 

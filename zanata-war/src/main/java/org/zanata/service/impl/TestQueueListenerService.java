@@ -22,7 +22,9 @@ package org.zanata.service.impl;
 
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageConsumer;
 import javax.jms.MessageListener;
+import javax.jms.ObjectMessage;
 import javax.jms.Queue;
 import javax.jms.QueueReceiver;
 import javax.jms.QueueSession;
@@ -43,6 +45,8 @@ import org.jboss.seam.annotations.Startup;
 import org.jboss.seam.contexts.Lifecycle;
 import org.jboss.seam.jms.QueueConnection;
 import org.zanata.dao.ProjectDAO;
+import org.zanata.events.TextFlowTargetStateEvent;
+import org.zanata.service.TranslationStateCache;
 
 /**
  * @author Carlos Munoz <a href="mailto:camunoz@redhat.com">camunoz@redhat.com</a>
@@ -54,7 +58,7 @@ public class TestQueueListenerService implements MessageListener {
 
     private QueueSession queueSession;
 
-    private QueueReceiver queueReceiver;
+    private MessageConsumer messageConsumer;
 
     @Create
     public void init() {
@@ -63,8 +67,11 @@ public class TestQueueListenerService implements MessageListener {
             queueSession = QueueConnection.instance().createQueueSession(false,
                     Session.DUPS_OK_ACKNOWLEDGE);
             Queue queue = (Queue)ctx.lookup("queue/test");
-            queueReceiver = queueSession.createReceiver(queue);
-            queueReceiver.setMessageListener(this);
+//            queueReceiver = queueSession.createReceiver(queue);
+            messageConsumer = queueSession.createConsumer(queue,
+                    "JMSType = '" + TextFlowTargetStateEvent.class.getName() + "'");
+            messageConsumer.setMessageListener(this);
+//            queueReceiver.setMessageListener(this);
         }
         catch (NamingException e) {
             throw new RuntimeException("myListener initialization failed", e);
@@ -80,8 +87,12 @@ public class TestQueueListenerService implements MessageListener {
         Lifecycle.beginCall();
 
         try {
-            Component.getInstance(ProjectDAO.class);
+            TranslationStateCache service = (TranslationStateCache)Component.getInstance("translationStateCacheImpl");
             System.out.println("Got a message: " + message.toString());
+            service.textFlowStateUpdated( (TextFlowTargetStateEvent)((ObjectMessage)message).getObject() );
+        }
+        catch (JMSException e) {
+            e.printStackTrace();
         }
         finally {
             Lifecycle.endCall();
@@ -90,9 +101,9 @@ public class TestQueueListenerService implements MessageListener {
 
     @Destroy
     public void destroy() {
-        if( queueReceiver != null ) {
+        if( messageConsumer != null ) {
             try {
-                queueReceiver.close();
+                messageConsumer.close();
             }
             catch (JMSException e) {
                 // Proceed
