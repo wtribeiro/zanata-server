@@ -22,7 +22,6 @@ package org.zanata.feature.glossary;
 
 import lombok.extern.slf4j.Slf4j;
 
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -37,11 +36,7 @@ import org.zanata.workflow.LoginWorkFlow;
 import java.io.File;
 import java.util.List;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.contains;
-import static org.hamcrest.Matchers.containsInAnyOrder;
-import static org.hamcrest.Matchers.greaterThan;
-
+import static org.assertj.core.api.Assertions.assertThat;
 /**
  * @author Carlos Munoz <a
  *         href="mailto:camunoz@redhat.com">camunoz@redhat.com</a>
@@ -71,25 +66,24 @@ public class GlossaryAdminTest extends ZanataTestCase {
         String userConfigPath =
                 ClientWorkFlow.getUserConfigPath("glossaryadmin");
 
-        List<String> result =
-                clientWorkFlow
-                        .callWithTimeout(
-                                projectRootPath,
-                                "mvn --batch-mode zanata:glossary-push -Dglossary.lang=hi -Dzanata.glossaryFile=compendium.csv -Dzanata.userConfig="
-                                        + userConfigPath);
+        List<String> result = clientWorkFlow.callWithTimeout(
+                projectRootPath,
+                "mvn --batch-mode zanata:glossary-push -Dglossary.lang=hi " +
+                "-Dzanata.glossaryFile=compendium.csv -Dzanata.userConfig=" +
+                userConfigPath);
 
-        assertThat(clientWorkFlow.isPushSuccessful(result),
-                Matchers.is(true));
+        assertThat(clientWorkFlow.isPushSuccessful(result)).isTrue();
 
         // Make sure glossary shows up on the page
-        GlossaryPage glossaryPage =
-                new LoginWorkFlow().signIn("admin", "admin").goToGlossary();
+        GlossaryPage glossaryPage = new LoginWorkFlow()
+                .signIn("admin", "admin")
+                .goToGlossary();
         List<String> langs = glossaryPage.getAvailableGlossaryLanguages();
 
-        assertThat(langs.size(), greaterThan(0));
-        assertThat(langs, containsInAnyOrder("pl", "hi", "en-US"));
-        assertThat(glossaryPage.getGlossaryEntryCount("pl"), greaterThan(1));
-        assertThat(glossaryPage.getGlossaryEntryCount("hi"), greaterThan(1));
-        assertThat(glossaryPage.getGlossaryEntryCount("en-US"), greaterThan(1));
+        assertThat(langs.size()).isGreaterThan(0);
+        assertThat(langs).containsOnly("pl", "hi", "en-US");
+        assertThat(glossaryPage.getGlossaryEntryCount("pl")).isGreaterThan(1);
+        assertThat(glossaryPage.getGlossaryEntryCount("hi")).isGreaterThan(1);
+        assertThat(glossaryPage.getGlossaryEntryCount("en-US")).isGreaterThan(1);
     }
 }
