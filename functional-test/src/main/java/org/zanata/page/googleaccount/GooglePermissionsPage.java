@@ -20,12 +20,12 @@
  */
 package org.zanata.page.googleaccount;
 
+import com.google.common.base.Predicate;
 import org.openqa.selenium.By;
+import org.openqa.selenium.TimeoutException;
 import org.openqa.selenium.WebDriver;
 import org.zanata.page.AbstractPage;
 import org.zanata.page.account.EditProfilePage;
-
-import com.google.common.base.Function;
 
 /**
  * @author Damian Jansen <a
@@ -37,13 +37,25 @@ public class GooglePermissionsPage extends AbstractPage {
     }
 
     public EditProfilePage acceptPermissions() {
-        waitForTenSec().until(new Function<WebDriver, Boolean>() {
-            @Override
-            public Boolean apply(WebDriver driver) {
-                return getDriver().findElement(By.id("submit_approve_access"))
-                        .isEnabled();
+        try {
+            waitForTenSec().until(new Predicate<WebDriver>() {
+                @Override
+                public boolean apply(WebDriver driver) {
+                    System.out.println("Waiting for access button");
+                    return getDriver()
+                            .findElement(By.id("submit_approve_access"))
+                            .isEnabled();
+                }
+            });
+        } catch (TimeoutException te) {
+            if (getDriver().findElements(By.id("profile-form:user-create-new"))
+                    .size() > 0) {
+                // We've somehow passed the "Accept Permissions" step -
+                // ok, let's just continue
+                return new EditProfilePage(getDriver());
             }
-        });
+
+        }
         getDriver().findElement(By.id("submit_approve_access")).click();
         return new EditProfilePage(getDriver());
     }

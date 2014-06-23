@@ -22,8 +22,6 @@ package org.zanata.page.googleaccount;
 
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
-import org.openqa.selenium.support.FindBy;
 import org.zanata.page.AbstractPage;
 
 /**
@@ -31,48 +29,37 @@ import org.zanata.page.AbstractPage;
  *         href="mailto:djansen@redhat.com">djansen@redhat.com</a>
  */
 public class GoogleAccountPage extends AbstractPage {
-    @FindBy(id = "Email")
-    private WebElement emailField;
-
-    @FindBy(id = "reauthEmail")
-    private WebElement emailLabelField;
-
-    @FindBy(id = "Passwd")
-    private WebElement passwordField;
-
-    @FindBy(id = "signIn")
-    private WebElement signInButton;
 
     public GoogleAccountPage(WebDriver driver) {
         super(driver);
     }
 
     public GoogleAccountPage enterGoogleEmail(String email) {
-        emailField.sendKeys(email);
+        getDriver().findElement(By.id("Email")).sendKeys(email);
         return new GoogleAccountPage(getDriver());
     }
 
     public GoogleAccountPage enterGooglePassword(String password) {
-        passwordField.sendKeys(password);
+        getDriver().findElement(By.id("Passwd")).sendKeys(password);
         return new GoogleAccountPage(getDriver());
     }
 
     public GooglePermissionsPage clickSignIn() {
-        signInButton.click();
+        getDriver().findElement(By.id("signIn")).click();
         return new GooglePermissionsPage(getDriver());
     }
 
     public GoogleManagePermissionsPage clickPermissionsSignIn() {
-        signInButton.click();
+        getDriver().findElement(By.id("signIn")).click();
         return new GoogleManagePermissionsPage(getDriver());
     }
 
     public String rememberedUser() {
-        return emailLabelField.getText();
+        return getDriver().findElement(By.id("reauthEmail")).getText();
     }
 
     public boolean hasRememberedAuthentication() {
-        return emailLabelField.isDisplayed();
+        return getDriver().findElement(By.id("reauthEmail")).isDisplayed();
     }
 
     public GoogleAccountPage removeSavedAuthentication() {

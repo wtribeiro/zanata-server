@@ -20,18 +20,18 @@
  */
 package org.zanata.feature.googleopenid;
 
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.Assume.assumeFalse;
 import static org.junit.Assume.assumeTrue;
 import static org.zanata.util.GoogleSignIn.getSignIn;
 import static org.zanata.util.GoogleSignIn.googleIsReachable;
 
-import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.ClassRule;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
+import org.zanata.feature.Feature;
 import org.zanata.feature.testharness.ZanataTestCase;
 import org.zanata.feature.testharness.TestPlan.UnstableTest;
 import org.zanata.page.googleaccount.GoogleAccountPage;
@@ -39,6 +39,7 @@ import org.zanata.page.googleaccount.GoogleManagePermissionsPage;
 import org.zanata.page.utility.HomePage;
 import org.zanata.util.CleanDatabaseRule;
 import org.zanata.util.HasEmailRule;
+import org.zanata.util.RetryRule;
 import org.zanata.workflow.BasicWorkFlow;
 import org.zanata.workflow.GoogleWorkFlow;
 import org.zanata.workflow.RegisterWorkFlow;
@@ -49,6 +50,9 @@ import org.zanata.workflow.RegisterWorkFlow;
  */
 @Category(UnstableTest.class)
 public class GoogleOpenIDTest extends ZanataTestCase {
+
+    @Rule
+    public RetryRule retryRule = new RetryRule(0);
 
     @Rule
     public CleanDatabaseRule cleanDatabaseRule = new CleanDatabaseRule();
@@ -62,9 +66,12 @@ public class GoogleOpenIDTest extends ZanataTestCase {
     @Before
     public void before() {
         googlePassword1 = getSignIn(googleUsername1);
-        assertThat("Environment has Google login data",
-                !googlePassword1.isEmpty());
-        assertThat("Google can be reached", googleIsReachable());
+        assertThat(googlePassword1.isEmpty())
+                .isFalse()
+                .as("Environment has Google login data");
+        assertThat(googleIsReachable())
+                .isTrue()
+                .as("Google servers can be communicated with");
 
         new BasicWorkFlow().goToHome().deleteCookiesAndRefresh();
 
@@ -81,19 +88,22 @@ public class GoogleOpenIDTest extends ZanataTestCase {
         assumeTrue(googleAccountPage.getUrl().contains("/ServiceLogin"));
     }
 
+    @Feature(summary = "The user can create an account using Google OpenID",
+            tcmsTestPlanIds = 5316, tcmsTestCaseIds = 0)
     @Test(timeout = ZanataTestCase.MAX_SHORT_TEST_DURATION)
     public void signInWithGoogleOpenID() {
         String googleUsername = googleUsername1;
         String googlePassword = googlePassword1;
 
-        HomePage homePage = new RegisterWorkFlow()
-                .registerGoogleOpenID("Zanata OpenID",
-                        "openidtest", googlePassword,
-                        googleUsername.concat("@gmail.com"));
+        HomePage homePage = new RegisterWorkFlow().registerGoogleOpenID(
+                "Zanata OpenID",
+                "openidtest",
+                googlePassword,
+                googleUsername.concat("@gmail.com"));
 
-        assertThat("The registration message is shown",
-                homePage.getNotificationMessage(),
-                Matchers.equalTo("You will soon receive an email with a link" +
-                        " to activate your account."));
+        assertThat(homePage.getNotificationMessage())
+                .isEqualTo("You will soon receive an email with a link" +
+                        " to activate your account.")
+                .as("The registration message is shown");
     }
 }
