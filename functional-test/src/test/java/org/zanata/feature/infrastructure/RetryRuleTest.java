@@ -21,7 +21,6 @@
 
 package org.zanata.feature.infrastructure;
 
-import org.hamcrest.Matchers;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.experimental.categories.Category;
@@ -29,7 +28,7 @@ import org.zanata.feature.testharness.ZanataTestCase;
 import org.zanata.feature.testharness.TestPlan.BasicAcceptanceTest;
 import org.zanata.util.RetryRule;
 
-import static org.hamcrest.MatcherAssert.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * @author Damian Jansen <a
@@ -42,20 +41,23 @@ public class RetryRuleTest extends ZanataTestCase {
     public RetryRule retryRule = new RetryRule(2);
 
     @Test(timeout = ZanataTestCase.MAX_SHORT_TEST_DURATION)
-    public void retryPassAfterFail() {
+    public void retryPassAfterFail() throws Exception {
         // Fail on the first execution, but pass on the second
-        assertThat("Current try is greater than 1", retryRule.currentTry(),
-                Matchers.greaterThan(1));
+        assertThat(retryRule.currentTry())
+                .isGreaterThan(1)
+                .as("Current try is greater than 1");
         // Can only pass on second execution
-        assertThat("This is the second try", retryRule.currentTry(),
-                Matchers.equalTo(2));
+        assertThat(retryRule.currentTry())
+                .isEqualTo(2)
+                .as("This is the second try");
     }
 
     @Test(timeout = ZanataTestCase.MAX_SHORT_TEST_DURATION)
-    public void passWillPass() {
-        assertThat("A normal passing test will pass", true);
-        assertThat("And pass on the first try", retryRule.currentTry(),
-                Matchers.equalTo(1));
+    public void passWillPass() throws Exception {
+        assertThat(true).isTrue().as("A normal passing test will pass");
+        assertThat(retryRule.currentTry())
+                .isEqualTo(1)
+                .as("And pass on the first try");
     }
 
     @Test(expected = AssertionError.class)
@@ -65,8 +67,9 @@ public class RetryRuleTest extends ZanataTestCase {
             throw new Exception();
         }
         // Passes on the second execution, expect-fails on the third
-        assertThat("The execution count is correct", retryRule.currentTry(),
-                Matchers.equalTo(2));
+        assertThat(retryRule.currentTry())
+                .isEqualTo(2)
+                .as("The execution count is correct");
         // Fails on the second execution
         throw new Exception();
     }
