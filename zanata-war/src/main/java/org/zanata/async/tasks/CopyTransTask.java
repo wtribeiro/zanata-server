@@ -23,6 +23,7 @@ package org.zanata.async.tasks;
 import lombok.Getter;
 import lombok.Setter;
 import org.zanata.async.AsyncTask;
+import org.zanata.async.AsyncTaskHandle;
 import org.zanata.async.TimedAsyncHandle;
 import org.zanata.model.HCopyTransOptions;
 import org.zanata.security.ZanataIdentity;
@@ -37,7 +38,7 @@ import java.io.IOException;
  * @author Carlos Munoz <a
  *         href="mailto:camunoz@redhat.com">camunoz@redhat.com</a>
  */
-public abstract class CopyTransTask implements
+public abstract class CopyTransTask extends
         AsyncTask<Void, CopyTransTask.CopyTransTaskHandle> {
 
     protected HCopyTransOptions copyTransOptions;
@@ -47,12 +48,6 @@ public abstract class CopyTransTask implements
     public CopyTransTask(HCopyTransOptions copyTransOptions, String taskName) {
         this.copyTransOptions = copyTransOptions;
         this.handle = new CopyTransTaskHandle(taskName);
-    }
-
-    @Nonnull
-    @Override
-    public CopyTransTaskHandle getHandle() {
-        return handle;
     }
 
     /**
@@ -76,7 +71,7 @@ public abstract class CopyTransTask implements
         return null;
     }
 
-    public static class CopyTransTaskHandle extends TimedAsyncHandle<Void> {
+    public static class CopyTransTaskHandle extends AsyncTaskHandle<Void> {
         @Getter
         @Setter
         private String cancelledBy;

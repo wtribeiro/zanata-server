@@ -20,10 +20,12 @@
  */
 package org.zanata.async;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.jboss.seam.annotations.In;
 import org.junit.Assert;
@@ -45,9 +47,9 @@ import static org.hamcrest.Matchers.is;
  * @author Carlos Munoz <a
  *         href="mailto:camunoz@redhat.com">camunoz@redhat.com</a>
  */
-public class AsyncTaskITCase extends ArquillianTest {
-    @In
-    private TaskExecutor taskExecutor;
+public class AsyncTaskITCase /*extends ArquillianTest*/ {
+    //@In
+    private TaskExecutor taskExecutor = new TaskExecutor();
 
     private CountDownLatch completed = new CountDownLatch(1);
     private Runnable onComplete = new Runnable() {
@@ -57,7 +59,7 @@ public class AsyncTaskITCase extends ArquillianTest {
         }
     };
 
-    @Override
+    //@Override
     protected void prepareDBUnitOperations() {
     }
 
@@ -154,13 +156,45 @@ public class AsyncTaskITCase extends ArquillianTest {
         assertThat(progressUpdates, contains(25, 50, 75, 100));
     }
 
+    @Test
+    public void multipleTasks() throws Exception {
+        final AtomicInteger finshedCount = new AtomicInteger(0);
+        // Start multiple asynchronous processes that throw an exception
+        Collection<AsyncTaskHandle> allHandles = Lists.newArrayList();
+        for(int i = 0; i < 20; i++) {
+            AsyncTaskHandle<String> handle =
+                taskExecutor.startTask(new SimpleAsyncTask<String>("executionError") {
+                    @Override
+                    public String call() throws Exception {
+                        System.out.println("Running a task...");
+                        Thread.sleep(1000);
+                        finshedCount.addAndGet(1);
+                        return "";
+                    }
+                }, onComplete);
+            allHandles.add(handle);
+        }
+
+        // Wait for the last handle to finish and get the result
+        waitUntilAllTasksAreDone(allHandles
+                .toArray(new AsyncTaskHandle[allHandles.size()]));
+        //awaitComplete();
+        assertThat(finshedCount.get(), is(20));
+    }
+
     /**
      * This is an active wait for a task to finish. Only use for short lived
      * tasks.
      */
     private static void waitUntilTaskIsDone(AsyncTaskHandle handle) {
-        while (!handle.isDone()) {
-            // Wait until it's done.
+        waitUntilAllTasksAreDone(handle);
+    }
+
+    private static void waitUntilAllTasksAreDone(AsyncTaskHandle ... handles) {
+        for( AsyncTaskHandle h : handles ) {
+            while(!h.isDone()) {
+                // Active wait
+            }
         }
     }
 

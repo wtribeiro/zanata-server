@@ -20,14 +20,21 @@
  */
 package org.zanata.async;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import org.jboss.seam.ScopeType;
 import org.jboss.seam.annotations.AutoCreate;
+import org.jboss.seam.annotations.Create;
+import org.jboss.seam.annotations.Destroy;
 import org.jboss.seam.annotations.In;
 import org.jboss.seam.annotations.Name;
 import org.jboss.seam.annotations.Scope;
 import org.jboss.seam.security.Identity;
 
 import javax.annotation.Nonnull;
+import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 /**
  * This component executes {@link org.zanata.async.AsyncTask} instances. It is
@@ -39,11 +46,34 @@ import javax.annotation.Nonnull;
  *         href="mailto:camunoz@redhat.com">camunoz@redhat.com</a>
  */
 @Name("taskExecutor")
-@Scope(ScopeType.STATELESS)
+@Scope(ScopeType.APPLICATION)
 @AutoCreate
 public class TaskExecutor {
+    
+    private static final Runnable NO_OP_RUNNABLE = new Runnable() {
+        @Override
+        public void run() {
+            // Nothing to do
+        }
+    };
+
     @In
-    private AsynchronousTaskExecutor asynchronousTaskExecutor;
+    private AsyncTaskHandleManager asyncTaskHandleManager;
+
+    private ExecutorService slowTaskExecutor;
+    private ExecutorService normalTaskExecutor;
+
+    @Create
+    public void init() {
+        slowTaskExecutor = Executors.newFixedThreadPool(1);
+        normalTaskExecutor = Executors.newFixedThreadPool(3);
+    }
+
+    @Destroy
+    public void cleanup() {
+        slowTaskExecutor.shutdown();
+        normalTaskExecutor.shutdown();
+    }
 
     /**
      * Executes an asynchronous task in the background.
@@ -55,14 +85,33 @@ public class TaskExecutor {
      * @throws RuntimeException
      *             If the provided task value is null.
      */
-    public <V, H extends AsyncTaskHandle<V>> AsyncTaskHandle<V> startTask(
-            @Nonnull AsyncTask<V, H> task, Runnable onComplete) {
-        H handle = task.getHandle();
+//    public <V, H extends AsyncTaskHandle<V>> AsyncTaskHandle<V> startTask(
+//            @Nonnull final AsyncTask<V, H> task, final Runnable onComplete) {
+//        H handle = task.getHandle();
+//        Identity identity = Identity.instance();
+//        executor.execute(new AsynchronousTaskEnvironmentWrapper(task,
+//                onComplete, identity.getPrincipal(), identity.getSubject(),
+//                identity.getCredentials().getUsername()));
+//        return handle;
+//    }
+
+    public <V, H extends AsyncTaskHandle<V>> ListenableFuture<V>
+            startTask(final @Nonnull AsyncTask<V, H> task,
+                    final AsyncTaskHandle<V> handle,
+                    final Runnable onComplete) {
+
+        final AsyncTaskResult<V> taskFuture = new AsyncTaskResult<V>();
         Identity identity = Identity.instance();
-        asynchronousTaskExecutor.runAsynchronously(task, onComplete, identity
-                .getPrincipal(), identity.getSubject(),
-                identity.getCredentials().getUsername());
-        return handle;
+        normalTaskExecutor.execute(new AsynchronousTaskEnvironmentWrapper(task,
+                handle, taskFuture,
+                onComplete, identity.getPrincipal(), identity.getSubject(),
+                identity.getCredentials().getUsername()));
+        return taskFuture;
     }
 
+    public <V, H extends AsyncTaskHandle<V>> ListenableFuture<V>
+            startTask(final @Nonnull AsyncTask<V, H> task,
+                    final AsyncTaskHandle<V> handle) {
+        return startTask(task, handle, NO_OP_RUNNABLE);
+    }
 }

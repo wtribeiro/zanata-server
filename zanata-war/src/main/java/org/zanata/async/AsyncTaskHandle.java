@@ -20,12 +20,17 @@
  */
 package org.zanata.async;
 
-import javax.annotation.Nullable;
-
-import com.google.common.util.concurrent.AbstractFuture;
-
+import com.google.common.base.Optional;
+import com.google.common.collect.Maps;
+import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 /**
  * Asynchronous handle to provide communication between an asynchronous task and
@@ -34,10 +39,13 @@ import lombok.Setter;
  * @author Carlos Munoz <a
  *         href="mailto:camunoz@redhat.com">camunoz@redhat.com</a>
  */
-public class AsyncTaskHandle<V> extends AbstractFuture<V> {
+public class AsyncTaskHandle<V> {
 
     @Getter
-    private final String taskName;
+    private final String id;
+
+    @Setter(AccessLevel.PACKAGE)
+    private Future<V> futureResult;
 
     @Getter
     @Setter
@@ -51,23 +59,23 @@ public class AsyncTaskHandle<V> extends AbstractFuture<V> {
     @Setter
     public int currentProgress = 0;
 
-    public AsyncTaskHandle(String taskName) {
-        this.taskName = taskName;
+    @Getter
+    private long startTime = -1;
+
+    @Getter
+    private long finishTime = -1;
+
+    AsyncTaskHandle(String id) {
+        if( id == null ) {
+            throw new IllegalArgumentException(
+                    "Neither id nor futureResult must be null.");
+        }
+        this.id = id;
     }
 
     @Override
     public String toString() {
-        return getClass().getSimpleName()+"(taskName="+taskName+")";
-    }
-
-    @Override
-    protected boolean setException(Throwable throwable) {
-        return super.setException(throwable);
-    }
-
-    @Override
-    protected boolean set(@Nullable V value) {
-        return super.set(value);
+        return getClass().getSimpleName()+"(id="+ id +")";
     }
 
     public int increaseProgress(int increaseBy) {
@@ -75,27 +83,93 @@ public class AsyncTaskHandle<V> extends AbstractFuture<V> {
         return currentProgress;
     }
 
-    /**
-     * Cancels the task without trying to forcefully interrupt the task. This is
-     * equivalent to calling <code>cancel(false)</code>
-     *
-     * @see AsyncTaskHandle#cancel(boolean)
-     * @return false if the task could not be cancelled, typically because it
-     *         has already completed normally; true otherwise
-     */
-    public boolean cancel() {
-        return cancel(false);
+    void startTiming() {
+        startTime = System.currentTimeMillis();
+    }
+
+    void finishTiming() {
+        finishTime = System.currentTimeMillis();
+    }
+
+    public boolean cancel(boolean mayInterruptIfRunning) {
+        return futureResult.cancel(mayInterruptIfRunning);
+    }
+
+    public V get() throws InterruptedException, ExecutionException {
+        return futureResult.get();
+    }
+
+    public V get(long timeout, TimeUnit unit)
+            throws InterruptedException, ExecutionException, TimeoutException {
+        return futureResult.get(timeout, unit);
+    }
+
+    public boolean isDone() {
+        return futureResult.isDone();
+    }
+
+    public boolean isCancelled() {
+        return futureResult.isCancelled();
     }
 
     /**
-     * Cancels the task, forcefully cancelling the task if needed. This is
-     * equivalent to calling <code>cancel(true)</code>
-     *
-     * @see AsyncTaskHandle#cancel(boolean)
-     * @return false if the task could not be cancelled, typically because it
-     *         has already completed normally; true otherwise
+     * @return An optional container with the estimated time remaining for the
+     *         process to finish, or an empty container if the time cannot be
+     *         estimated.
      */
-    public boolean forceCancel() {
-        return cancel(true);
+    public Optional<Long> getEstimatedTimeRemaining() {
+        if (this.startTime > 0 && currentProgress > 0) {
+            long currentTime = System.currentTimeMillis();
+            long timeElapsed = currentTime - this.startTime;
+            int remainingUnits = this.maxProgress - this.currentProgress;
+            return Optional.of(timeElapsed * remainingUnits
+                    / this.currentProgress);
+        } else {
+            return Optional.absent();
+        }
+    }
+
+    /**
+     * @return The time that the task has been executing for, or the total
+     *         execution time if the task has finished (in milliseconds).
+     */
+    public long getExecutingTime() {
+        if (startTime > 0) {
+            if (finishTime > startTime) {
+                return finishTime - startTime;
+            } else {
+                return System.currentTimeMillis() - startTime;
+            }
+        } else {
+            return 0;
+        }
+    }
+
+    /**
+     * @return The estimated elapsed time (in milliseconds) from the start of
+     *         the process.
+     */
+    public long getTimeSinceStart() {
+        if (this.startTime > 0) {
+            long currentTime = System.currentTimeMillis();
+            long timeElapsed = currentTime - this.startTime;
+            return timeElapsed;
+        } else {
+            return 0;
+        }
+    }
+
+    /**
+     * @return The estimated elapsed time (in milliseconds) from the finish of
+     *         the process.
+     */
+    public long getTimeSinceFinish() {
+        if (finishTime > 0) {
+            long currentTime = System.currentTimeMillis();
+            long timeElapsed = currentTime - finishTime;
+            return timeElapsed;
+        } else {
+            return 0;
+        }
     }
 }

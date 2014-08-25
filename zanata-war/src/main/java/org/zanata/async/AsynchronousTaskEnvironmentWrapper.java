@@ -21,10 +21,12 @@
 package org.zanata.async;
 
 import java.security.Principal;
+import java.util.concurrent.Future;
 
 import javax.security.auth.Subject;
 
 import com.google.common.util.concurrent.MoreExecutors;
+import lombok.AllArgsConstructor;
 import org.jboss.seam.ScopeType;
 import org.jboss.seam.annotations.AutoCreate;
 import org.jboss.seam.annotations.Name;
@@ -48,54 +50,52 @@ import org.zanata.util.ServiceLocator;
  * @author Carlos Munoz <a
  *         href="mailto:camunoz@redhat.com">camunoz@redhat.com</a>
  */
-@Name("asynchronousTaskExecutor")
-@Scope(ScopeType.STATELESS)
-@AutoCreate
+@AllArgsConstructor
 @Slf4j
-public class AsynchronousTaskExecutor {
+public class AsynchronousTaskEnvironmentWrapper extends RunAsOperation
+    implements Runnable {
 
-    /**
-     * Runs the provided task asynchronously with the given security
-     * constraints.
-     *
-     * @param task Task to run asynchronously.
-     * @param runAsPpal Security Principal to tun the task.
-     * @param runAsSubject Security Subject to run the task.
-     * @param username The username to run the task.
-     */
-    @Asynchronous
-    public <V, H extends AsyncTaskHandle<V>> void runAsynchronously(
-            final AsyncTask<V, H> task, final Runnable onComplete,
-            final Principal runAsPpal,
-            final Subject runAsSubject, final String username) {
-        AsyncUtils.outject(task.getHandle(), ScopeType.EVENT);
+    private AsyncTask task;
+    private AsyncTaskHandle handle;
+    private AsyncTaskResult result;
+    private Runnable onComplete;
+    private final Principal runAsPpal;
+    private final Subject runAsSubject;
+    private final String username;
 
-        RunAsOperation runAsOp = new RunAsOperation() {
-            @Override
-            public void execute() {
-                try {
-                    prepareSecurityContext(username);
-                    V returnValue = task.call();
-                    task.getHandle().set(returnValue);
-                } catch (Throwable t) {
-                    task.getHandle().setException(t);
-                    log.error(
-                        "Exception when executing an asynchronous task.", t);
-                }
-                onComplete.run();
+    @Override
+    public void execute() {
+        AsyncUtils.outject(handle, ScopeType.EVENT);
+
+        try {
+            task.setFuture(result);
+            if( handle != null ) {
+                task.setHandle(handle);
+                handle.startTiming();
             }
-
-            @Override
-            public Principal getPrincipal() {
-                return runAsPpal;
+            prepareSecurityContext(username);
+            Object returnValue = task.call();
+            result.set(returnValue);
+        } catch (Throwable t) {
+            result.setException(t);
+            log.error(
+                "Exception when executing an asynchronous task.", t);
+        } finally {
+            if( handle != null ) {
+                handle.finishTiming();
             }
+        }
+        onComplete.run();
+    }
 
-            @Override
-            public Subject getSubject() {
-                return runAsSubject;
-            }
-        };
-        runAsOp.run();
+    @Override
+    public Principal getPrincipal() {
+        return runAsPpal;
+    }
+
+    @Override
+    public Subject getSubject() {
+        return runAsSubject;
     }
 
     /**
@@ -105,7 +105,7 @@ public class AsynchronousTaskExecutor {
     private static void prepareSecurityContext(String username) {
         /*
          * TODO This should be changed to not need the username. There should be
-         * a way to simulate a login for asyn tasks, or at least to inherit the
+         * a way to simulate a login for async tasks, or at least to inherit the
          * caller's context
          */
         if( username != null ) {
@@ -116,9 +116,6 @@ public class AsynchronousTaskExecutor {
             ZanataJpaIdentityStore idStore =
                     ServiceLocator.instance().getInstance(
                             ZanataJpaIdentityStore.class);
-            AuthenticationEvents authEvts =
-                    ServiceLocator.instance().getInstance(
-                            AuthenticationEvents.class);
             HAccount authenticatedAccount = accountDAO.getByUsername(username);
             idStore.setAuthenticateUser(authenticatedAccount);
         }

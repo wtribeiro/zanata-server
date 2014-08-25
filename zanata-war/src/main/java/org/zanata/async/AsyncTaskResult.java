@@ -1,5 +1,5 @@
 /*
- * Copyright 2013, Red Hat, Inc. and individual contributors as indicated by the
+ * Copyright 2014, Red Hat, Inc. and individual contributors as indicated by the
  * @author tags. See the copyright.txt file in the distribution for a full
  * listing of individual contributors.
  *
@@ -20,29 +20,31 @@
  */
 package org.zanata.async;
 
-import lombok.Getter;
-import lombok.Setter;
+import javax.annotation.Nullable;
 
-import java.util.concurrent.Callable;
-import java.util.concurrent.Future;
+import com.google.common.util.concurrent.AbstractFuture;
 
 /**
- * Public common class for all asynchronous tasks in the system.
- *
- * @param <V>
- *            The type of value returned by this task once finished.
- *
+ * This is the result for an async task.
  * @author Carlos Munoz <a
  *         href="mailto:camunoz@redhat.com">camunoz@redhat.com</a>
  */
-public abstract class AsyncTask<V, H extends AsyncTaskHandle<V>> implements
-        Callable<V> {
+public class AsyncTaskResult<V> extends AbstractFuture<V> {
 
-    @Getter @Setter
-    private Future<V> future;
-    
-    @Getter @Setter
-    private H handle;
+    public AsyncTaskResult() {
+    }
 
+    public AsyncTaskResult(V value) {
+        set(value);
+    }
 
+    @Override
+    public boolean set(@Nullable V value) {
+        return super.set(value);
+    }
+
+    @Override
+    public boolean setException(Throwable throwable) {
+        return super.setException(throwable);
+    }
 }
