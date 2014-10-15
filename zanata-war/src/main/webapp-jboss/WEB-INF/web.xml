@@ -315,4 +315,9 @@
     <mime-type>application/xrd+xml</mime-type>
   </mime-mapping>
 
+  <error-page>
+    <error-code>404</error-code>
+    <location>/404.seam</location>
+  </error-page>
+
 </web-app>
